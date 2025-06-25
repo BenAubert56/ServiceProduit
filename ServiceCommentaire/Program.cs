@@ -1,6 +1,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Steeltoe.Discovery.Client;
+using Steeltoe.Common.Http.Discovery;
 
 namespace ServiceCommentaire
 {
@@ -14,6 +15,10 @@ namespace ServiceCommentaire
 
             builder.Services.AddControllers();
             builder.Services.AddDiscoveryClient(builder.Configuration);
+            builder.Services.AddHttpClient("service-produit", client =>
+            {
+                client.BaseAddress = new Uri("lb://service-produit/");
+            }).AddRandomLoadBalancer();
             builder.Services.AddDbContext<Models.AppDbContext>(opt =>
                 opt.UseMySql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
