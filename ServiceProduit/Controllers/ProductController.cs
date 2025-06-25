@@ -45,7 +45,6 @@ namespace ServiceProduit.Controllers
                 }
                 catch
                 {
-                    // ignore if comment service is unavailable
                 }
             }
 

@@ -41,7 +41,6 @@ namespace ServiceCommentaire.Controllers
                 }
                 catch
                 {
-                    // ignore if product service is unavailable
                 }
             }
 
