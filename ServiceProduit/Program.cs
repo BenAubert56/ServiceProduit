@@ -13,7 +13,7 @@ namespace ServiceProduit
 
             builder.Services.AddControllers();
             builder.Services.AddDbContext<Models.AppDbContext>(opt =>
-                opt.UseInMemoryDatabase("products"));
+                opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
