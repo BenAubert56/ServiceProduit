@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using Steeltoe.Discovery.Client;
 
 namespace ServiceProduit
 {
@@ -12,6 +13,7 @@ namespace ServiceProduit
             // Add services to the container.
 
             builder.Services.AddControllers();
+            builder.Services.AddDiscoveryClient(builder.Configuration);
             builder.Services.AddDbContext<Models.AppDbContext>(opt =>
                 opt.UseMySql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -21,6 +23,7 @@ namespace ServiceProduit
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+            app.UseDiscoveryClient();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
