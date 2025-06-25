@@ -13,7 +13,9 @@ namespace ServiceCommentaire
 
             builder.Services.AddControllers();
             builder.Services.AddDbContext<Models.AppDbContext>(opt =>
-                opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                opt.UseMySql(
+                    builder.Configuration.GetConnectionString("DefaultConnection"),
+                    ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
