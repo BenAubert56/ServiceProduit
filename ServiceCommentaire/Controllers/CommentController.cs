@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using ServiceCommentaire.Models;
+using System.Net.Http.Json;
 
 namespace ServiceCommentaire.Controllers
 {
@@ -9,10 +11,12 @@ namespace ServiceCommentaire.Controllers
     public class CommentController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public CommentController(AppDbContext context)
+        public CommentController(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         [HttpGet("{id}")]
@@ -24,11 +28,29 @@ namespace ServiceCommentaire.Controllers
             if (comment == null)
                 return NotFound();
 
+            string productName = string.Empty;
+            var baseAddress = _configuration["ProductServiceBaseAddress"];
+            if (!string.IsNullOrEmpty(baseAddress))
+            {
+                try
+                {
+                    using var client = new HttpClient();
+                    var product = await client.GetFromJsonAsync<ProductDto>($"{baseAddress}/api/product/{comment.ProductId}");
+                    if (product != null)
+                        productName = product.Name;
+                }
+                catch
+                {
+                    // ignore if product service is unavailable
+                }
+            }
+
             var result = new
             {
                 comment.Id,
                 comment.Text,
-                comment.Rating
+                comment.Rating,
+                ProductName = productName
             };
 
             return Ok(result);
@@ -78,4 +100,6 @@ namespace ServiceCommentaire.Controllers
             return NoContent();
         }
     }
+
+    internal record ProductDto(int Id, string Name);
 }
