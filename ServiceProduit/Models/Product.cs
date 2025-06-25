@@ -6,6 +6,5 @@ namespace ServiceProduit.Models
         public string Name { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public bool Notable { get; set; }
-        public ICollection<Comment>? Comments { get; set; }
     }
 }
