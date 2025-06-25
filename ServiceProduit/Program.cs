@@ -1,4 +1,6 @@
 
+using Microsoft.EntityFrameworkCore;
+
 namespace ServiceProduit
 {
     public class Program
@@ -10,6 +12,8 @@ namespace ServiceProduit
             // Add services to the container.
 
             builder.Services.AddControllers();
+            builder.Services.AddDbContext<Models.AppDbContext>(opt =>
+                opt.UseInMemoryDatabase("products"));
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
