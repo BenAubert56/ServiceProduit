@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using ServiceProduit.Models;
+using System.Net.Http.Json;
 
 namespace ServiceProduit.Controllers
 {
@@ -9,10 +11,12 @@ namespace ServiceProduit.Controllers
     public class ProductController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public ProductController(AppDbContext context)
+        public ProductController(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -23,14 +27,38 @@ namespace ServiceProduit.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<object>> GetProduct(int id)
         {
             var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
                 return NotFound();
 
-            return Ok(product);
+            double rating = 0;
+            var baseAddress = _configuration["CommentServiceBaseAddress"];
+            if (!string.IsNullOrEmpty(baseAddress))
+            {
+                try
+                {
+                    using var client = new HttpClient();
+                    rating = await client.GetFromJsonAsync<double>($"{baseAddress}/api/comment/product/{id}/average");
+                }
+                catch
+                {
+                    // ignore if comment service is unavailable
+                }
+            }
+
+            var result = new
+            {
+                product.Id,
+                product.Name,
+                product.Price,
+                product.Notable,
+                Rating = rating
+            };
+
+            return Ok(result);
         }
 
         [HttpPost]
