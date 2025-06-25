@@ -16,45 +16,21 @@ namespace ServiceProduit.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            var products = await _context.Products
-                .Include(p => p.Comments)
-                .ToListAsync();
-
-            var result = products.Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Price,
-                p.Notable,
-                AverageRating = p.Comments.Any() ? p.Comments.Average(c => c.Rating) : 0
-            });
-
-            return Ok(result);
+            var products = await _context.Products.ToListAsync();
+            return Ok(products);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<object>> GetProduct(int id)
+        public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = await _context.Products
-                .Include(p => p.Comments)
-                .FirstOrDefaultAsync(p => p.Id == id);
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
                 return NotFound();
 
-            var result = new
-            {
-                product.Id,
-                product.Name,
-                product.Price,
-                product.Notable,
-                AverageRating = product.Comments.Any() ? product.Comments.Average(c => c.Rating) : 0,
-                Comments = product.Comments.Select(c => new { c.Id, c.Text, c.Rating })
-            };
-
-            return Ok(result);
+            return Ok(product);
         }
 
         [HttpPost]
@@ -79,14 +55,9 @@ namespace ServiceProduit.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await _context.Products
-                .Include(p => p.Comments)
-                .FirstOrDefaultAsync(p => p.Id == id);
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
                 return NotFound();
-
-            if (product.Comments.Any())
-                return BadRequest("Cannot delete a product with comments.");
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();

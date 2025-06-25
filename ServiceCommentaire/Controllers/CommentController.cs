@@ -19,7 +19,6 @@ namespace ServiceCommentaire.Controllers
         public async Task<ActionResult<object>> GetComment(int id)
         {
             var comment = await _context.Comments
-                .Include(c => c.Product)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (comment == null)
@@ -29,8 +28,7 @@ namespace ServiceCommentaire.Controllers
             {
                 comment.Id,
                 comment.Text,
-                comment.Rating,
-                ProductName = comment.Product?.Name
+                comment.Rating
             };
 
             return Ok(result);
@@ -39,15 +37,22 @@ namespace ServiceCommentaire.Controllers
         [HttpPost]
         public async Task<ActionResult<Comment>> CreateComment(Comment comment)
         {
-            var product = await _context.Products.FindAsync(comment.ProductId);
-            if (product == null || !product.Notable)
-            {
-                return BadRequest("Cannot add comment to non-notable product.");
-            }
-
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, comment);
+        }
+
+        [HttpGet("product/{productId}/average")]
+        public async Task<ActionResult<double>> GetAverageRating(int productId)
+        {
+            var comments = await _context.Comments
+                .Where(c => c.ProductId == productId)
+                .ToListAsync();
+
+            if (!comments.Any())
+                return Ok(0);
+
+            return Ok(comments.Average(c => c.Rating));
         }
 
         [HttpPut("{id}")]

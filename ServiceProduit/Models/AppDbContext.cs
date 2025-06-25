@@ -10,6 +10,5 @@ namespace ServiceProduit.Models
         }
 
         public DbSet<Product> Products => Set<Product>();
-        public DbSet<Comment> Comments => Set<Comment>();
     }
 }
