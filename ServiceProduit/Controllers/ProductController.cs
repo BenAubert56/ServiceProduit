@@ -5,6 +5,7 @@ using ServiceProduit.Models;
 using System.Net.Http.Json;
 using Steeltoe.Common.Discovery;
 using Steeltoe.Common.Http.Discovery;
+using Steeltoe.Discovery;
 
 namespace ServiceProduit.Controllers
 {
