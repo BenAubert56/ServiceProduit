@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using ServiceProduit.Models;
 using System.Net.Http.Json;
-using Steeltoe.Common.Discovery;
-using Steeltoe.Common.Http.Discovery;
-using Steeltoe.Discovery;
+using System.Net.Http;
 
 namespace ServiceProduit.Controllers
 {
@@ -14,14 +11,12 @@ namespace ServiceProduit.Controllers
     public class ProductController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IDiscoveryClient _discoveryClient;
+        private readonly IHttpClientFactory _clientFactory;
 
-        public ProductController(AppDbContext context, IConfiguration configuration, IDiscoveryClient discoveryClient)
+        public ProductController(AppDbContext context, IHttpClientFactory clientFactory)
         {
             _context = context;
-            _configuration = configuration;
-            _discoveryClient = discoveryClient;
+            _clientFactory = clientFactory;
         }
 
         [HttpGet]
@@ -40,18 +35,13 @@ namespace ServiceProduit.Controllers
                 return NotFound();
 
             double rating = 0;
-            var baseAddress = _configuration["CommentServiceBaseAddress"];
-            if (!string.IsNullOrEmpty(baseAddress))
+            try
             {
-                try
-                {
-                    using var handler = new DiscoveryHttpClientHandler(_discoveryClient);
-                    using var client = new HttpClient(handler);
-                    rating = await client.GetFromJsonAsync<double>($"{baseAddress}/api/comment/product/{id}/average");
-                }
-                catch
-                {
-                }
+                var client = _clientFactory.CreateClient("service-commentaire");
+                rating = await client.GetFromJsonAsync<double>($"api/comment/product/{id}/average");
+            }
+            catch
+            {
             }
 
             var result = new

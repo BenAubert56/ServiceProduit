@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using ServiceCommentaire.Models;
 using System.Net.Http.Json;
-using Steeltoe.Common.Discovery;
-using Steeltoe.Common.Http.Discovery;
-using Steeltoe.Discovery;
+using System.Net.Http;
 
 namespace ServiceCommentaire.Controllers
 {
@@ -14,14 +11,12 @@ namespace ServiceCommentaire.Controllers
     public class CommentController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IDiscoveryClient _discoveryClient;
+        private readonly IHttpClientFactory _clientFactory;
 
-        public CommentController(AppDbContext context, IConfiguration configuration, IDiscoveryClient discoveryClient)
+        public CommentController(AppDbContext context, IHttpClientFactory clientFactory)
         {
             _context = context;
-            _configuration = configuration;
-            _discoveryClient = discoveryClient;
+            _clientFactory = clientFactory;
         }
 
         [HttpGet("{id}")]
@@ -34,20 +29,15 @@ namespace ServiceCommentaire.Controllers
                 return NotFound();
 
             string productName = string.Empty;
-            var baseAddress = _configuration["ProductServiceBaseAddress"];
-            if (!string.IsNullOrEmpty(baseAddress))
+            try
             {
-                try
-                {
-                    using var handler = new DiscoveryHttpClientHandler(_discoveryClient);
-                    using var client = new HttpClient(handler);
-                    var product = await client.GetFromJsonAsync<ProductDto>($"{baseAddress}/api/product/{comment.ProductId}");
-                    if (product != null)
-                        productName = product.Name;
-                }
-                catch
-                {
-                }
+                var client = _clientFactory.CreateClient("service-produit");
+                var product = await client.GetFromJsonAsync<ProductDto>($"api/product/{comment.ProductId}");
+                if (product != null)
+                    productName = product.Name;
+            }
+            catch
+            {
             }
 
             var result = new
