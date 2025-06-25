@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ServiceProduit.Models;
 using System.Net.Http.Json;
+using Steeltoe.Common.Discovery;
+using Steeltoe.Common.Http.Discovery;
 
 namespace ServiceProduit.Controllers
 {
@@ -12,11 +14,13 @@ namespace ServiceProduit.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IDiscoveryClient _discoveryClient;
 
-        public ProductController(AppDbContext context, IConfiguration configuration)
+        public ProductController(AppDbContext context, IConfiguration configuration, IDiscoveryClient discoveryClient)
         {
             _context = context;
             _configuration = configuration;
+            _discoveryClient = discoveryClient;
         }
 
         [HttpGet]
@@ -40,7 +44,8 @@ namespace ServiceProduit.Controllers
             {
                 try
                 {
-                    using var client = new HttpClient();
+                    using var handler = new DiscoveryHttpClientHandler(_discoveryClient);
+                    using var client = new HttpClient(handler);
                     rating = await client.GetFromJsonAsync<double>($"{baseAddress}/api/comment/product/{id}/average");
                 }
                 catch

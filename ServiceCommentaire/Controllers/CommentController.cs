@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ServiceCommentaire.Models;
 using System.Net.Http.Json;
+using Steeltoe.Common.Discovery;
+using Steeltoe.Common.Http.Discovery;
 
 namespace ServiceCommentaire.Controllers
 {
@@ -12,11 +14,13 @@ namespace ServiceCommentaire.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IDiscoveryClient _discoveryClient;
 
-        public CommentController(AppDbContext context, IConfiguration configuration)
+        public CommentController(AppDbContext context, IConfiguration configuration, IDiscoveryClient discoveryClient)
         {
             _context = context;
             _configuration = configuration;
+            _discoveryClient = discoveryClient;
         }
 
         [HttpGet("{id}")]
@@ -34,7 +38,8 @@ namespace ServiceCommentaire.Controllers
             {
                 try
                 {
-                    using var client = new HttpClient();
+                    using var handler = new DiscoveryHttpClientHandler(_discoveryClient);
+                    using var client = new HttpClient(handler);
                     var product = await client.GetFromJsonAsync<ProductDto>($"{baseAddress}/api/product/{comment.ProductId}");
                     if (product != null)
                         productName = product.Name;
