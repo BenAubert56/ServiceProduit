@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ServiceProduit.Models;
 using System.Net.Http.Json;
 using System.Net.Http;
+using Polly;
 
 namespace ServiceProduit.Controllers
 {
@@ -35,14 +36,15 @@ namespace ServiceProduit.Controllers
                 return NotFound();
 
             double rating = 0;
-            try
+            var client = _clientFactory.CreateClient("service-commentaire");
+            var fallback = Policy<double>
+                .Handle<Exception>()
+                .FallbackAsync(0d);
+
+            rating = await fallback.ExecuteAsync(async () =>
             {
-                var client = _clientFactory.CreateClient("service-commentaire");
-                rating = await client.GetFromJsonAsync<double>($"api/comment/product/{id}/average");
-            }
-            catch
-            {
-            }
+                return await client.GetFromJsonAsync<double>($"api/comment/product/{id}/average");
+            });
 
             var result = new
             {

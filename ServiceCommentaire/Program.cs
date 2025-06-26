@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Steeltoe.Discovery.Client;
 using Steeltoe.Common.Http.Discovery;
+using Polly;
+using Polly.Extensions.Http;
+using System.Net.Http;
 
 namespace ServiceCommentaire
 {
@@ -18,7 +21,13 @@ namespace ServiceCommentaire
             builder.Services.AddHttpClient("service-produit", client =>
             {
                 client.BaseAddress = new Uri("lb://service-produit/");
-            }).AddRandomLoadBalancer();
+            })
+            .AddRandomLoadBalancer()
+            .AddTransientHttpErrorPolicy(policy =>
+                policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(5)))
+            .AddPolicyHandler(Policy.BulkheadAsync<HttpResponseMessage>(
+                maxParallelization: 5,
+                maxQueuingActions: int.MaxValue));
             builder.Services.AddDbContext<Models.AppDbContext>(opt =>
                 opt.UseMySql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
