@@ -19,16 +19,17 @@ namespace ServiceProduit
             {
                 client.BaseAddress = new Uri("lb://service-commentaire/");
             }).AddRandomLoadBalancer();
+
             builder.Services.AddDbContext<Models.AppDbContext>(opt =>
                 opt.UseMySql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
                     ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
-            app.UseDiscoveryClient();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
