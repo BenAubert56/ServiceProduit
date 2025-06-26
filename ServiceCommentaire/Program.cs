@@ -8,6 +8,7 @@ using System.Net.Http;
 using Steeltoe.Messaging.RabbitMQ.Extensions;
 using Steeltoe.Messaging.RabbitMQ.Config;
 using RabbitMQ.Client;
+using Steeltoe.Connector.RabbitMQ;
 
 namespace ServiceCommentaire
 {
@@ -40,7 +41,7 @@ namespace ServiceCommentaire
             builder.Services.AddRabbitServices(true);
             builder.Services.AddRabbitAdmin();
             builder.Services.AddRabbitTemplate();
-            builder.Services.AddRabbitExchange("ms.produit", ExchangeType.TOPIC);
+            builder.Services.AddRabbitExchange("ms.produit", Steeltoe.Messaging.RabbitMQ.Config.ExchangeType.TOPIC);
             builder.Services.AddSingleton<Handlers.ProductEventHandler>();
             builder.Services.AddRabbitListeners<Handlers.ProductEventHandler>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -48,7 +49,6 @@ namespace ServiceCommentaire
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
-            app.UseDiscoveryClient();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

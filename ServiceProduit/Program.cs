@@ -8,6 +8,7 @@ using System.Net.Http;
 using Steeltoe.Messaging.RabbitMQ.Extensions;
 using Steeltoe.Messaging.RabbitMQ.Config;
 using RabbitMQ.Client;
+using Steeltoe.Connector.RabbitMQ;
 
 namespace ServiceProduit
 {
@@ -41,7 +42,7 @@ namespace ServiceProduit
             builder.Services.AddRabbitServices(true);
             builder.Services.AddRabbitAdmin();
             builder.Services.AddRabbitTemplate();
-            builder.Services.AddRabbitExchange("ms.produit", ExchangeType.TOPIC);
+            builder.Services.AddRabbitExchange("ms.produit", Steeltoe.Messaging.RabbitMQ.Config.ExchangeType.TOPIC);
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
