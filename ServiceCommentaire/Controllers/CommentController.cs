@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ServiceCommentaire.Models;
 using System.Net.Http.Json;
 using System.Net.Http;
+using Polly;
 
 namespace ServiceCommentaire.Controllers
 {
@@ -29,16 +30,17 @@ namespace ServiceCommentaire.Controllers
                 return NotFound();
 
             string productName = string.Empty;
-            try
+            var client = _clientFactory.CreateClient("service-produit");
+            var fallback = Policy<ProductDto?>
+                .Handle<Exception>()
+                .FallbackAsync((ProductDto?)null);
+
+            var product = await fallback.ExecuteAsync(async () =>
             {
-                var client = _clientFactory.CreateClient("service-produit");
-                var product = await client.GetFromJsonAsync<ProductDto>($"api/product/{comment.ProductId}");
-                if (product != null)
-                    productName = product.Name;
-            }
-            catch
-            {
-            }
+                return await client.GetFromJsonAsync<ProductDto>($"api/product/{comment.ProductId}");
+            });
+            if (product != null)
+                productName = product.Name;
 
             var result = new
             {
