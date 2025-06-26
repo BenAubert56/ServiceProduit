@@ -4,6 +4,8 @@ using ServiceProduit.Models;
 using System.Net.Http.Json;
 using System.Net.Http;
 using Polly;
+using Steeltoe.Messaging.RabbitMQ.Core;
+using ServiceProduit.Events;
 
 namespace ServiceProduit.Controllers
 {
@@ -13,11 +15,13 @@ namespace ServiceProduit.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IHttpClientFactory _clientFactory;
+        private readonly RabbitTemplate _rabbitTemplate;
 
-        public ProductController(AppDbContext context, IHttpClientFactory clientFactory)
+        public ProductController(AppDbContext context, IHttpClientFactory clientFactory, RabbitTemplate rabbitTemplate)
         {
             _context = context;
             _clientFactory = clientFactory;
+            _rabbitTemplate = rabbitTemplate;
         }
 
         [HttpGet]
@@ -63,6 +67,8 @@ namespace ServiceProduit.Controllers
         {
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
+            var evt = new ProductCreatedEvent(product.Id, product.Name, product.Price);
+            _rabbitTemplate.ConvertAndSend("ms.produit", "product.created", evt);
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 

@@ -5,6 +5,9 @@ using Steeltoe.Common.Http.Discovery;
 using Polly;
 using Polly.Extensions.Http;
 using System.Net.Http;
+using Steeltoe.Messaging.RabbitMQ.Extensions;
+using Steeltoe.Messaging.RabbitMQ.Config;
+using RabbitMQ.Client;
 
 namespace ServiceProduit
 {
@@ -33,6 +36,12 @@ namespace ServiceProduit
                 opt.UseMySql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
                     ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+
+            builder.Services.AddRabbitMQConnection(builder.Configuration);
+            builder.Services.AddRabbitServices(true);
+            builder.Services.AddRabbitAdmin();
+            builder.Services.AddRabbitTemplate();
+            builder.Services.AddRabbitExchange("ms.produit", ExchangeType.TOPIC);
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
