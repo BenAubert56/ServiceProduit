@@ -12,8 +12,6 @@ builder.Services.AddDiscoveryClient(builder.Configuration);
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
-
 await app.UseOcelot();
 
 app.Run();
