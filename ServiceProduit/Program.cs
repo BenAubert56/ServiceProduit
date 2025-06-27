@@ -43,8 +43,6 @@ namespace ServiceProduit
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
-
             app.UseAuthorization();
 
 
