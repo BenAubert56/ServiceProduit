@@ -1,16 +1,16 @@
-using Steeltoe.Messaging.RabbitMQ.Attributes;
-using Steeltoe.Messaging.RabbitMQ.Config;
 using ServiceLecture.Events;
 using ServiceLecture.Models;
+using Steeltoe.Messaging.RabbitMQ.Attributes;
 
 namespace ServiceLecture.Handlers
 {
     public class EventHandler
     {
-        private readonly AppDbContext _context;
-        public EventHandler(AppDbContext context)
+        private readonly IServiceScopeFactory _scopeFactory;
+
+        public EventHandler(IServiceScopeFactory scopeFactory)
         {
-            _context = context;
+            _scopeFactory = scopeFactory;
         }
 
         [DeclareQueue(Name = "ms.produit.created.read-service", Durable = "True")]
@@ -18,9 +18,12 @@ namespace ServiceLecture.Handlers
         [RabbitListener(Binding = "ms.produit.created.read.binding")]
         public void OnProductCreated(ProductCreatedEvent e)
         {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
             var product = new Product { Id = e.Id, Name = e.Name, Price = e.Price };
-            _context.Products.Add(product);
-            _context.SaveChanges();
+            context.Products.Add(product);
+            context.SaveChanges();
         }
 
         [DeclareQueue(Name = "ms.comment.created.read-service", Durable = "True")]
@@ -28,6 +31,9 @@ namespace ServiceLecture.Handlers
         [RabbitListener(Binding = "ms.comment.created.read.binding")]
         public void OnCommentCreated(CommentCreatedEvent e)
         {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
             var comment = new Comment
             {
                 Id = e.Id,
@@ -37,8 +43,8 @@ namespace ServiceLecture.Handlers
                 EaseOfUseRating = e.EaseOfUseRating,
                 ProductId = e.ProductId
             };
-            _context.Comments.Add(comment);
-            _context.SaveChanges();
+            context.Comments.Add(comment);
+            context.SaveChanges();
         }
     }
 }
