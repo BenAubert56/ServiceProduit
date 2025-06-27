@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServiceProduit.Models;
-using System.Net.Http.Json;
-using System.Net.Http;
-using Polly;
 using Steeltoe.Messaging.RabbitMQ.Core;
 using ServiceProduit.Events;
 
@@ -14,52 +11,12 @@ namespace ServiceProduit.Controllers
     public class ProductController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IHttpClientFactory _clientFactory;
         private readonly RabbitTemplate _rabbitTemplate;
 
-        public ProductController(AppDbContext context, IHttpClientFactory clientFactory, RabbitTemplate rabbitTemplate)
+        public ProductController(AppDbContext context, RabbitTemplate rabbitTemplate)
         {
             _context = context;
-            _clientFactory = clientFactory;
             _rabbitTemplate = rabbitTemplate;
-        }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
-        {
-            var products = await _context.Products.ToListAsync();
-            return Ok(products);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<object>> GetProduct(int id)
-        {
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
-
-            if (product == null)
-                return NotFound();
-
-            double rating = 0;
-            var client = _clientFactory.CreateClient("service-commentaire");
-            var fallback = Policy<double>
-                .Handle<Exception>()
-                .FallbackAsync(0d);
-
-            rating = await fallback.ExecuteAsync(async () =>
-            {
-                return await client.GetFromJsonAsync<double>($"api/comment/product/{id}/average");
-            });
-
-            var result = new
-            {
-                product.Id,
-                product.Name,
-                product.Price,
-                product.Notable,
-                Rating = rating
-            };
-
-            return Ok(result);
         }
 
         [HttpPost]
@@ -69,7 +26,7 @@ namespace ServiceProduit.Controllers
             await _context.SaveChangesAsync();
             var evt = new ProductCreatedEvent(product.Id, product.Name, product.Price);
             _rabbitTemplate.ConvertAndSend("ms.produit", "product.created", evt);
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+            return Created(string.Empty, product);
         }
 
         [HttpPut("{id}")]

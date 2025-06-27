@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServiceCommentaire.Models;
-using System.Net.Http.Json;
-using System.Net.Http;
-using Polly;
+using Steeltoe.Messaging.RabbitMQ.Core;
+using ServiceCommentaire.Events;
 
 namespace ServiceCommentaire.Controllers
 {
@@ -12,45 +11,12 @@ namespace ServiceCommentaire.Controllers
     public class CommentController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IHttpClientFactory _clientFactory;
+        private readonly RabbitTemplate _rabbitTemplate;
 
-        public CommentController(AppDbContext context, IHttpClientFactory clientFactory)
+        public CommentController(AppDbContext context, RabbitTemplate rabbitTemplate)
         {
             _context = context;
-            _clientFactory = clientFactory;
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<object>> GetComment(int id)
-        {
-            var comment = await _context.Comments
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (comment == null)
-                return NotFound();
-
-            string productName = string.Empty;
-            var client = _clientFactory.CreateClient("service-produit");
-            var fallback = Policy<ProductDto?>
-                .Handle<Exception>()
-                .FallbackAsync((ProductDto?)null);
-
-            var product = await fallback.ExecuteAsync(async () =>
-            {
-                return await client.GetFromJsonAsync<ProductDto>($"api/product/{comment.ProductId}");
-            });
-            if (product != null)
-                productName = product.Name;
-
-            var result = new
-            {
-                comment.Id,
-                comment.Text,
-                comment.Rating,
-                ProductName = productName
-            };
-
-            return Ok(result);
+            _rabbitTemplate = rabbitTemplate;
         }
 
         [HttpPost]
@@ -58,20 +24,9 @@ namespace ServiceCommentaire.Controllers
         {
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, comment);
-        }
-
-        [HttpGet("product/{productId}/average")]
-        public async Task<ActionResult<double>> GetAverageRating(int productId)
-        {
-            var comments = await _context.Comments
-                .Where(c => c.ProductId == productId)
-                .ToListAsync();
-
-            if (!comments.Any())
-                return Ok(0);
-
-            return Ok(comments.Average(c => c.Rating));
+            var evt = new CommentCreatedEvent(comment.Id, comment.Text, comment.QualityRating, comment.ValueForMoneyRating, comment.EaseOfUseRating, comment.ProductId);
+            _rabbitTemplate.ConvertAndSend("ms.produit", "comment.created", evt);
+            return Created(string.Empty, comment);
         }
 
         [HttpPut("{id}")]
@@ -97,6 +52,4 @@ namespace ServiceCommentaire.Controllers
             return NoContent();
         }
     }
-
-    internal record ProductDto(int Id, string Name);
 }
