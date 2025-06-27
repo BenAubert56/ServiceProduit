@@ -1,20 +1,16 @@
-
 using Microsoft.EntityFrameworkCore;
 using Steeltoe.Discovery.Client;
 using Steeltoe.Messaging.RabbitMQ.Extensions;
 using Steeltoe.Messaging.RabbitMQ.Config;
-using RabbitMQ.Client;
 using Steeltoe.Connector.RabbitMQ;
 
-namespace ServiceProduit
+namespace ServiceLecture
 {
     public class Program
     {
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
 
             builder.Services.AddControllers();
             builder.Services.AddDiscoveryClient(builder.Configuration);
@@ -28,15 +24,15 @@ namespace ServiceProduit
             builder.Services.AddRabbitServices(true);
             builder.Services.AddRabbitAdmin();
             builder.Services.AddRabbitTemplate();
-            builder.Services.AddRabbitExchange("ms.produit", Steeltoe.Messaging.RabbitMQ.Config.ExchangeType.TOPIC);
+            builder.Services.AddRabbitExchange("ms.produit", ExchangeType.TOPIC);
+            builder.Services.AddSingleton<Handlers.EventHandler>();
+            builder.Services.AddRabbitListeners<Handlers.EventHandler>();
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -44,9 +40,7 @@ namespace ServiceProduit
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
 
             app.MapControllers();
 
