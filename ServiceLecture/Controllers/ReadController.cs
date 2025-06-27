@@ -20,6 +20,21 @@ namespace ServiceLecture.Controllers
             return await _context.Products.ToListAsync();
         }
 
+        [HttpGet("comments")]
+        public async Task<ActionResult<IEnumerable<Comment>>> GetComments()
+        {
+            return await _context.Comments.ToListAsync();
+        }
+
+        [HttpGet("comment/{id}")]
+        public async Task<ActionResult<Comment?>> GetComment(int id)
+        {
+            var comment = await _context.Comments.FirstOrDefaultAsync(c => c.Id == id);
+            if (comment == null)
+                return NotFound();
+            return comment;
+        }
+
         [HttpGet("product/{id}")]
         public async Task<ActionResult<object>> GetProduct(int id)
         {
