@@ -1,0 +1,30 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/product/{**catch-all}",
+      "DownstreamScheme": "http",
+      "ServiceName": "service-produit",
+      "UpstreamPathTemplate": "/produits/{**catch-all}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/comment/{**catch-all}",
+      "DownstreamScheme": "http",
+      "ServiceName": "service-commentaire",
+      "UpstreamPathTemplate": "/commentaires/{**catch-all}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/read/{**catch-all}",
+      "DownstreamScheme": "http",
+      "ServiceName": "service-lecture",
+      "UpstreamPathTemplate": "/lectures/{**catch-all}",
+      "UpstreamHttpMethod": [ "GET", "POST" ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "ServiceDiscoveryProvider": {
+      "Type": "Eureka"
+    }
+  }
+}
