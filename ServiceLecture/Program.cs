@@ -25,7 +25,7 @@ namespace ServiceLecture
             builder.Services.AddRabbitAdmin();
             builder.Services.AddRabbitTemplate();
             builder.Services.AddRabbitExchange("ms.produit", ExchangeType.TOPIC);
-            builder.Services.AddSingleton<Handlers.EventHandler>();
+            builder.Services.AddScoped<Handlers.EventHandler>();
             builder.Services.AddRabbitListeners<Handlers.EventHandler>();
 
             builder.Services.AddEndpointsApiExplorer();
