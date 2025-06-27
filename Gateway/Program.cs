@@ -1,5 +1,6 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using Ocelot.Provider.Eureka;
 using Steeltoe.Discovery.Client;
 
 var builder = WebApplication.CreateBuilder(args);
