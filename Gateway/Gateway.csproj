@@ -9,5 +9,6 @@
     <PackageReference Include="Ocelot.Provider.Eureka" Version="17.0.0" />
     <PackageReference Include="Steeltoe.Discovery.ClientCore" Version="3.1.4" />
     <PackageReference Include="Steeltoe.Discovery.Eureka" Version="3.1.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 </Project>
